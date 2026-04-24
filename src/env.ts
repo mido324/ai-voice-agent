@@ -28,6 +28,12 @@ const schema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
 
   PUBLIC_BASE_URL: z.string().url(),
+  CORS_ALLOWED_ORIGINS: z.string().optional().or(z.literal('')),
+  RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
+  RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(120),
+  RATE_LIMIT_CHAT_MAX_REQUESTS: z.coerce.number().int().positive().default(30),
+  RATE_LIMIT_ADMIN_MAX_REQUESTS: z.coerce.number().int().positive().default(60),
+  RATE_LIMIT_WEBHOOK_MAX_REQUESTS: z.coerce.number().int().positive().default(240),
 });
 
 const parsed = schema.safeParse(process.env);
