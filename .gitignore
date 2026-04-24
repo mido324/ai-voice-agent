@@ -1,0 +1,19 @@
+node_modules/
+dist/
+build/
+*.log
+.env
+.env.local
+.env.*.local
+.env.tmp
+.env.new
+.DS_Store
+.vscode/
+.idea/
+coverage/
+*.tsbuildinfo
+/tmp/
+
+# Claude/IDE/editor state
+.claude/
+CLAUDE.md

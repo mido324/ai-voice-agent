@@ -1,0 +1,23 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-brand: oklch(62% 0.18 260);
+  --color-brand-dark: oklch(48% 0.2 260);
+  --color-surface: oklch(99% 0 0);
+  --color-ink: oklch(18% 0 0);
+  --color-muted: oklch(55% 0 0);
+  --color-border: oklch(92% 0 0);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Inter', 'Segoe UI', sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
