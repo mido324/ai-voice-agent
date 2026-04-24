@@ -28,6 +28,15 @@ const callShape = z
   })
   .passthrough();
 
+const reportMessage = z
+  .object({
+    role: z.string(),
+    message: z.string().optional(),
+    content: z.string().optional(),
+    time: z.number().optional(),
+  })
+  .passthrough();
+
 const envelope = z.object({
   message: z
     .object({
@@ -38,9 +47,41 @@ const envelope = z.object({
       transcript: z.string().optional(),
       durationSeconds: z.number().optional(),
       status: z.string().optional(),
+      messages: z.array(reportMessage).optional(),
     })
     .passthrough(),
 });
+
+function normalizeReportMessages(
+  raw: z.infer<typeof reportMessage>[] | undefined,
+): TranscriptEntry[] {
+  if (!raw) return [];
+  const out: TranscriptEntry[] = [];
+  for (const m of raw) {
+    const text = m.message ?? m.content ?? '';
+    if (!text) continue;
+    let role: TranscriptEntry['role'];
+    switch (m.role) {
+      case 'user':
+        role = 'user';
+        break;
+      case 'bot':
+      case 'assistant':
+        role = 'assistant';
+        break;
+      case 'tool_calls':
+      case 'tool_call_result':
+      case 'tool':
+        role = 'tool';
+        break;
+      default:
+        continue; // drop system and unknown
+    }
+    const ts = typeof m.time === 'number' ? new Date(m.time).toISOString() : new Date().toISOString();
+    out.push({ role, text, ts });
+  }
+  return out;
+}
 
 function phoneFromCall(call: z.infer<typeof callShape> | undefined): string {
   return call?.customer?.number ?? call?.phoneNumber?.number ?? 'unknown';
@@ -86,8 +127,16 @@ vapiRouter.post('/events', json({ limit: '2mb' }), verifyVapiSecret, async (req,
 
       case 'end-of-call-report': {
         if (call) {
-          await finalizeCall(call.id, message.durationSeconds ?? 0);
-          logger.info({ vapiCallId: call.id }, 'Call finalized');
+          const finalTranscript = normalizeReportMessages(message.messages);
+          await finalizeCall(
+            call.id,
+            message.durationSeconds ?? 0,
+            finalTranscript.length > 0 ? finalTranscript : undefined,
+          );
+          logger.info(
+            { vapiCallId: call.id, transcriptEntries: finalTranscript.length },
+            'Call finalized',
+          );
           void summarizeCall(call.id).catch((err: unknown) => {
             logger.error({ err, vapiCallId: call.id }, 'Summary generation failed');
           });
