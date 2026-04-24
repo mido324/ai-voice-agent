@@ -17,3 +17,4 @@ coverage/
 # Claude/IDE/editor state
 .claude/
 CLAUDE.md
+.playwright-mcp/
