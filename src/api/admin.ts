@@ -121,6 +121,19 @@ adminRouter.get('/stats', async (_req, res) => {
     supabase.from('appointments').select('id', { count: 'exact', head: true }),
   ]);
 
+  if (calls.error || leads.error || appts.error) {
+    logger.error(
+      {
+        callsError: calls.error,
+        leadsError: leads.error,
+        appointmentsError: appts.error,
+      },
+      'Admin: stats query failed',
+    );
+    res.status(500).json({ error: 'Query failed' });
+    return;
+  }
+
   res.json({
     calls: calls.count ?? 0,
     leads: leads.count ?? 0,
